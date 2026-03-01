@@ -97,6 +97,9 @@ app.include_router(ai.router)
 
 # ── Frontend Estático ────────────────────────────────────────────────────────
 _FRONTEND = Path(__file__).parent.parent / "frontend" / "public"
+# No Vercel, o caminho pode ser diferente dependendo de como as pastas são montadas
+if not _FRONTEND.exists():
+    _FRONTEND = Path(__file__).parent / "frontend" / "public"
 
 if _FRONTEND.exists():
     # Monta arquivos estáticos (CSS, JS, etc.) — mas NÃO sobrescreve rotas da API
