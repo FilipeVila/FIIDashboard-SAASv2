@@ -31,10 +31,20 @@ class Settings(BaseSettings):
     # Tamanho máximo do payload (bytes) — 1 MB
     max_payload_size: int = 1_048_576
 
-    # Modelos Anthropic permitidos (whitelist)
+    # API Keys
+    anthropic_api_key: str = Field(alias="ANTHROPIC_API_KEY", default="")
+    openai_api_key_1: str = Field(alias="OPENAI_API_KEY_1", default="")
+    openai_api_key_2: str = Field(alias="OPENAI_API_KEY_2", default="")
+    gemini_api_key: str = Field(alias="GEMINI_API_KEY", default="")
+
+    # Configurações de API e Segurança
     allowed_models: List[str] = [
         "claude-3-5-sonnet-20241022",
         "claude-3-5-haiku-20241022",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
         "claude-3-opus-20240229",
         "claude-3-sonnet-20240229",
         "claude-3-haiku-20240307",
