@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Security configured via Helmet HTTP headers on the server -->
+
+  <!-- Security: Prevent MIME sniffing -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <!-- Security: Prevent clickjacking in iframes -->
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <!-- Security: XSS filter for legacy browsers -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <!-- Security: Referrer policy — do not leak URL info -->
+  <meta name="referrer" content="no-referrer">
+  <title>FII Dashboard Realtime</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="l-logo">
+      <div class="l-logo-box">📈</div>
+      <div>
+        <div class="l-logo-name">FII Dashboard</div>
+        <div class="l-logo-sub">PROCESSANDO DADOS</div>
+      </div>
+    </div>
+
+    <div class="l-orbital">
+      <div class="l-orbital-ring"></div>
+      <div class="l-orbital-ring"></div>
+      <div class="l-orbital-ring"></div>
+      <div class="l-orbital-core"></div>
+    </div>
+
+    <div class="l-steps" id="lSteps">
+      <div class="l-step-item" id="ls0">
+        <div class="l-step-icon">📂</div>
+        <div class="l-step-txt">
+          <div class="l-step-name">Lendo planilha</div>
+          <div class="l-step-desc">Processando arquivo Excel...</div>
+        </div>
+        <div class="l-step-state">
+          <div class="l-step-spinner"></div>
+          <span class="l-step-check">—</span>
+        </div>
+      </div>
+      <div class="l-step-item" id="ls1">
+        <div class="l-step-icon">🗂️</div>
+        <div class="l-step-txt">
+          <div class="l-step-name">Mapeando colunas</div>
+          <div class="l-step-desc">Identificando estrutura da aba MetasFIIs</div>
+        </div>
+        <div class="l-step-state">
+          <div class="l-step-spinner"></div>
+          <span class="l-step-check">—</span>
+        </div>
+      </div>
+      <div class="l-step-item" id="ls2">
+        <div class="l-step-icon">🤖</div>
+        <div class="l-step-txt">
+          <div class="l-step-name">IA pesquisando na internet</div>
+          <div class="l-step-desc">Buscando P/VP, DY e Rend/cota em tempo real...</div>
+        </div>
+        <div class="l-step-state">
+          <div class="l-step-spinner"></div>
+          <span class="l-step-check">—</span>
+        </div>
+      </div>
+      <div class="l-step-item" id="ls3">
+        <div class="l-step-icon">💡</div>
+        <div class="l-step-txt">
+          <div class="l-step-name">Calculando métricas</div>
+          <div class="l-step-desc">Processando KPIs e resultados...</div>
+        </div>
+        <div class="l-step-state">
+          <div class="l-step-spinner"></div>
+          <span class="l-step-check">—</span>
+        </div>
+      </div>
+      <div class="l-step-item" id="ls4">
+        <div class="l-step-icon">📊</div>
+        <div class="l-step-txt">
+          <div class="l-step-name">Renderizando dashboard</div>
+          <div class="l-step-desc">Montando gráficos e tabelas</div>
+        </div>
+        <div class="l-step-state">
+          <div class="l-step-spinner"></div>
+          <span class="l-step-check">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="l-progress">
+      <div class="l-progress-bar" id="lBar"></div>
+    </div>
+    <div class="l-msg" id="lMsg">Iniciando...</div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="logo">
+      <div class="logo-box">📈</div>
+      <div>
+        <div class="logo-name">FII Dashboard</div>
+        <div class="logo-sub">REALTIME · IA ENRICHED · v8</div>
+      </div>
+    </div>
+    <div class="nav-div"></div>
+    <!-- Security badge -->
+    <div
+      style="display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;background:rgba(34,212,126,.07);border:1px solid rgba(34,212,126,.18);font-size:11px;font-family:var(--mono);font-weight:600;color:var(--green);flex-shrink:0">
+      🔒 Seguro
+    </div>
+    <div class="nav-filters" id="navFilters">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="fl">Segmento</span>
+        <select id="fSeg">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="fl">Categoria</span>
+        <select id="fCat">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="fl">Fundo</span>
+        <select id="fFii">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <button class="btn-ok" id="applyFiltersBtn">Aplicar Filtros</button>
+    </div>
+    <div class="nav-r">
+
+      <label class="up-label" for="fileInput">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        Upload Planilha
+      </label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="th-btn" id="thBtn">🌙</div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- EMPTY STATE -->
+    <div class="empty" id="emptyState">
+      <div class="e-box">📊</div>
+      <div class="e-title">Nenhum dado carregado</div>
+      <div class="e-desc">Faça upload da sua planilha <strong>MetasFIIs</strong> para visualizar análises completas com
+        dados enriquecidos por IA.</div>
+      <label class="e-btn" for="fileInput">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        Carregar Planilha Excel
+      </label>
+      <div class="e-feats">
+        <span class="e-pill">🤖 Segmentos corrigidos por IA</span>
+        <span class="e-pill">📐 P/VP atualizado</span>
+        <span class="e-pill">💰 DY recente</span>
+        <span class="e-pill">🔒 Dados protegidos</span>
+        <span class="e-pill">🔍 Filtros interativos</span>
+        <span class="e-pill">🌙 Tema claro/escuro</span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dash" style="display:none">
+
+      <!-- Status bar -->
+      <div class="status">
+        <div class="dot"></div>
+        <span class="s-muted">Dashboard ativo &nbsp;·&nbsp;</span>
+        <span class="s-num" id="sNum">0 fundos</span>
+        <span class="s-muted">&nbsp;carregados</span>
+        <div class="s-right">
+          <div class="ai-pill">✦ IA &nbsp;<span id="aiCnt">0/0</span>&nbsp; enriched</div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" id="tab-overview">
+          📊 Visão Geral
+        </button>
+        <button class="tab-btn" id="tab-rebalance">
+          🎯 Rebalanceamento
+        </button>
+      </div>
+
+      <!-- TAB: VISÃO GERAL -->
+      <div id="tabOverview">
+        <div class="ai-bar">
+          <div class="ai-icon">🤖</div>
+          <div style="flex:1">
+            <div class="ai-ttl">🌐 Dados buscados na internet em tempo real — P/VP · DY ·
+              Rend/cota · Segmento</div>
+            <div class="ai-desc">Claude AI usa <strong>web search</strong> para buscar dados atualizados de cada ticker
+              no
+              Funds Explorer, Status Invest e Clube FII. Cada fundo é pesquisado individualmente. Valores marcados com
+              <strong style="color:var(--purple)">AI</strong> são dados reais da internet.
+              <span style="color:var(--green);font-weight:600"> · 🔒 Dados processados localmente, sem armazenamento
+                externo.</span>
+            </div>
+            <div class="ai-chips" id="aiChips"></div>
+          </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <!-- Charts row 1 -->
+        <div class="r2">
+          <div class="card">
+            <div class="ct">🏆 Resultado Real por Fundo</div>
+            <div class="cs">Variação de capital + proventos acumulados</div>
+            <div class="cw"><canvas id="cRes"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="ct">🍩 Patrimônio por Categoria</div>
+            <div class="cs">Distribuição do valor total por tipo de fundo</div>
+            <div class="cw"><canvas id="cCat"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Charts row 2 -->
+        <div class="r2">
+          <div class="card">
+            <div class="ct">💸 Renda Mensal Estimada</div>
+            <div class="cs">Proventos mensais por fundo (Cotas × Rendimento/cota)</div>
+            <div class="cw"><canvas id="cRenda"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="ct">📐 P/VP da Carteira</div>
+            <div class="cs">Verde = desconto &nbsp;|&nbsp; Azul = neutro &nbsp;|&nbsp; Vermelho = prêmio</div>
+            <div class="cw"><canvas id="cPvp"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="ct">📋 Carteira Completa</div>
+          <div class="cs">Todos os FIIs — segmentos e categorias validados por IA &nbsp;|&nbsp; <span
+              style="color:var(--purple);font-weight:700">AI</span> = dado corrigido pela IA</div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th title="Fundo (Ticker)">Fundo</th>
+                  <th title="Segmento do FII">Seg.</th>
+                  <th title="Categoria">Cat.</th>
+                  <th title="Quantidade de Cotas">Cotas</th>
+                  <th title="Preço Médio de Compra">P.Méd</th>
+                  <th title="Preço Atual">P.Atual</th>
+                  <th title="Preço sobre Valor Patrimonial">P/VP <span
+                      style="color:var(--purple);font-size:9px">AI</span></th>
+                  <th title="Dividend Yield mensal">DY/mês <span style="color:var(--purple);font-size:9px">AI</span>
+                  </th>
+                  <th title="Último rendimento por cota">Rend/cota <span
+                      style="color:var(--purple);font-size:9px">AI</span></th>
+                  <th title="Total investido (Preço Médio × Cotas)">Tot.PM</th>
+                  <th title="Total atual (Preço Atual × Cotas)">Tot.PA</th>
+                  <th title="Variação de Capital">Δ Cap.</th>
+                  <th title="Proventos acumulados">Provs.</th>
+                  <th title="Resultado Real (Capital + Proventos)">Resultado</th>
+                </tr>
+              </thead>
+              <tbody id="tBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tabOverview -->
+
+      <!-- TAB: REBALANCEAMENTO -->
+      <div id="tabRebalance" style="display:none">
+
+        <!-- Meta bar -->
+        <div class="rb-meta-bar">
+          <span class="rb-meta-label">🎯 Meta de Renda Mensal</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px;color:var(--text2);font-family:var(--mono)">R$</span>
+            <input class="rb-meta-input" type="number" id="rbMeta" value="850" min="0" max="99999" step="50"
+              placeholder="850">
+          </div>
+          <div class="nav-div"></div>
+          <span class="rb-meta-label">💰 Tenho para investir agora</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px;color:var(--text2);font-family:var(--mono)">R$</span>
+            <input class="rb-meta-input" type="number" id="rbAporte" value="907.80" min="0" max="999999" step="10"
+              placeholder="316.60" style="border-color:rgba(34,212,126,.3);background:rgba(34,212,126,.04)">
+          </div>
+          <div class="rb-divider"></div>
+          <button class="rb-run-btn" id="rbRunBtn">
+            <span id="rbRunIco">⚡</span> Analisar Carteira
+          </button>
+        </div>
+
+        <!-- Diagnóstico Atual -->
+        <div id="rbDiag" style="display:none">
+
+          <div style="font-size:17px;font-weight:700;margin-bottom:14px;letter-spacing:-.3px">📊 Diagnóstico Atual</div>
+          <div class="rb-diag-grid" id="rbDiagGrid"></div>
+
+          <!-- Alertas automáticos -->
+          <div class="rb-alerts" id="rbAlerts"></div>
+
+          <!-- Simulação crescimento -->
+          <div class="rb-sim-card">
+            <div class="ct" style="color:var(--blue)">📈 Simulação de Crescimento</div>
+            <div class="cs">Projeção com aporte mensal + reinvestimento de dividendos + DY médio atual</div>
+            <div class="rb-progress-wrap">
+              <div class="rb-progress-lbl">
+                <span>Renda atual</span>
+                <span id="rbProgPct">0%</span>
+              </div>
+              <div class="rb-progress-bg">
+                <div class="rb-progress-fill" id="rbProgBar" style="width:0%"></div>
+              </div>
+              <div class="rb-progress-lbl" style="margin-top:4px">
+                <span id="rbProgLeft" style="color:var(--text3)">—</span>
+                <span style="color:var(--text3)">Meta: <strong id="rbProgMeta"
+                    style="color:var(--text)">—</strong></span>
+              </div>
+            </div>
+            <div class="rb-sim-grid" id="rbSimGrid"></div>
+          </div>
+
+          <!-- Recomendação Principal (motor de regras) -->
+          <div class="rb-rec-card">
+            <div class="ct" style="color:var(--green)">🧠 Motor de Decisão — Próximo Aporte</div>
+            <div class="cs">Análise baseada estritamente nas suas regras estratégicas</div>
+            <div id="rbDecision" style="margin-top:16px">
+              <div class="rb-rec-loading">
+                <div class="rb-rec-spinner"></div> Calculando...
+              </div>
+            </div>
+          </div>
+
+          <!-- Classificação completa de FIIs -->
+          <div class="card" style="margin-bottom:20px">
+            <div class="ct">🏷️ Classificação dos FIIs da Carteira</div>
+            <div class="cs">Prioritário · Venda · Neutro — baseado nas regras fixas da estratégia</div>
+            <div class="rb-fii-list" id="rbFiiList"></div>
+          </div>
+
+        </div><!-- /rbDiag -->
+
+        <!-- Placeholder antes de analisar -->
+        <div id="rbPlaceholder" style="text-align:center;padding:60px 20px;color:var(--text2)">
+          <div style="font-size:52px;margin-bottom:16px">🎯</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Configure sua meta e analise
+          </div>
+          <div style="font-size:14px;line-height:1.7">Defina a renda desejada e o aporte mensal acima,<br>depois clique
+            em <strong style="color:var(--green)">Analisar Carteira</strong>.</div>
+        </div>
+
+      </div><!-- /tabRebalance -->
+
+    </div><!-- /dash -->
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+  <footer
+    style="text-align:center;padding:28px 40px;border-top:1px solid var(--border);margin-top:40px;font-size:12px;color:var(--text3);font-family:var(--mono)">
+    © Copyright 2026 - 2026 &nbsp;·&nbsp; <span style="color:var(--text2);font-weight:600">@Filipevilanova</span>
+    &nbsp;·&nbsp; Todos os direitos reservados.
+  </footer>
+
+</body>
+
+</html>

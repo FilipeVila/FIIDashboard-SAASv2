@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.venv/
+venv/
+env/
+.env
+
+# Node (Legacy/Files potentially left)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# App Specific
+backend-python/.venv/
+backend-python/.env
+frontend/public/js/error.txt
+frontend/public/js/ok.txt
+frontend/public/js/out.txt
+frontend/public/js/syntax_check.txt
