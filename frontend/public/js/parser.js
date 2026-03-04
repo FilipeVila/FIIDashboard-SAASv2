@@ -41,29 +41,43 @@ export function parseSheet(rows) {
     if (!rows?.[h]) return null; // planilha inválida
 
     // Mapeia colunas
-    const hd = rows[h].map(c => c ? String(c).trim().toLowerCase() : '');
+    // Normaliza cabeçalhos: remove quebras de linha internas e espaços extras
+    // (planilhas automatizadas usam cabeçalhos multilinhas como "PREÇO\nATUAL")
+    const hd = rows[h].map(c =>
+        c ? String(c).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase() : ''
+    );
     const C = {};
     hd.forEach((v, i) => {
         if (/segmento/.test(v)) C.seg = i;
         if (/categor/.test(v)) C.cat = i;
         if (/^ffis$|^fii$|^fiis$|^ticker$|^fundo$|^ativo$|^ativos$/.test(v)) C.tk = i;
-        if (/^valor$|^preço$|^preco$/.test(v)) C.vl = i;
+        // "PREÇO ATUAL", "PREÇO", "VALOR" — qualquer variante
+        if (/preç.*at|prec.*at|^valor$|^preço$|^preco$/.test(v)) C.vl = i;
+        // "COTAS" — mas não "COTAS P/META" ou "VP/COTA"
         if (/^cotas$/.test(v)) C.co = i;
-        if (/rendimento/.test(v)) C.re = i;
-        if (/^p\/vp$|^pvp$/.test(v)) C.pv = i;
-        if (/^dy$/.test(v)) C.dy = i;
-        if (/prec.*med|med.*prec/.test(v)) C.pm = i;
-        if (/^ganhos$/.test(v)) C.ga = i;
+        // "REND/COTA (auto)", "RENDIMENTO", "REND COTA"
+        if (/rendimento|rend.*cota|rend\/cota/.test(v) && !/total/.test(v)) C.re = i;
+        // "P/VP (auto)", "P/VP", "PVP"
+        if (/p\/vp|^pvp$/.test(v)) C.pv = i;
+        // "DY% (calc)", "DY%", "DY"
+        if (/^dy/.test(v)) C.dy = i;
+        // "PREÇO MÉDIO", "PREÇO MED"
+        if (/prec.*med|med.*prec|preç.*méd|preç.*med/.test(v)) C.pm = i;
+        // "REND TOTAL MÊS", "GANHOS"
+        if (/^ganhos$|rend.*total|ganho.*mes/.test(v)) C.ga = i;
         if (/total.*pm/.test(v)) C.tp = i;
         if (/total.*pa/.test(v)) C.ta = i;
-        if (/^diferença$|^diferenca$/.test(v)) C.df = i;
-        if (/vp.*cota|patrimonial.*cota|val.*patrimonial/.test(v)) C.vpc = i;
+        if (/^diferença$|^diferenca$|^dif$/.test(v)) C.df = i;
+        // "VP/COTA (auto)", "VP/COTA", "VALOR PATRIMONIAL/COTA"
+        if (/vp.*cota|vp\/cota|patrimonial.*cota|val.*patrimonial/.test(v)) C.vpc = i;
         if (/proventos/.test(v)) C.pr = i;
-        if (/real/.test(v)) C.rl = i;
+        // "DIF REAL", "REAL" — mas não "diferença"
+        if (/dif.*real|^real$/.test(v)) C.rl = i;
     });
 
-    // Fallback de índices por posição padrão da planilha MetasFIIs
-    const FB = { seg: 0, cat: 1, tk: 2, vl: 3, co: 4, re: 5, pv: 6, dy: 7, pm: 8, ga: 9, tp: 11, ta: 12, df: 13, pr: 14, rl: 15 };
+    // Fallback de índices por posição — atualizado para a nova estrutura da planilha automatizada:
+    // SEGMENTOS | CATEGORIA | FII | PREÇO ATUAL | VP/COTA | P/VP | REND/COTA | DY% | COTAS | PREÇO MÉDIO | REND TOTAL MÊS | TOTAL PM | TOTAL PA | DIFERENÇA | PROVENTOS | DIF REAL
+    const FB = { seg: 0, cat: 1, tk: 2, vl: 3, vpc: 4, pv: 5, re: 6, dy: 7, co: 8, pm: 9, ga: 10, tp: 11, ta: 12, df: 13, pr: 14, rl: 15 };
     Object.keys(FB).forEach(k => { if (C[k] == null) C[k] = FB[k]; });
 
     const result = [];
